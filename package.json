@@ -12,7 +12,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "pdf-parse": "^1.1.1",
-    "react18-json-view": "^1.0.3",
+    "@microlink/react-json-view": "^2.0.1",
     "formidable": "^3.5.0"
   }
 }
