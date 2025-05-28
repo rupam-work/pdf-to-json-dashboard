@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 
-const ReactJson = dynamic(() => import('react18-json-view'), { ssr: false });
+const ReactJson = dynamic(() => import('@microlink/react-json-view'), { ssr: false });
 
 export default function Home() {
   const [json, setJson] = useState(null);
