@@ -1,5 +1,6 @@
-import formidable from 'formidable';
-import pdfParse from 'pdf-parse';
+import formidable from "formidable";
+import fs from "fs";
+import axios from "axios";
 
 export const config = {
   api: {
@@ -7,48 +8,79 @@ export const config = {
   },
 };
 
+function mapToAAJSON(type, text) {
+  if (type === "MUTUAL_FUND") {
+    return {
+      profile: { holder: "Sample Name", pan: "XXXX1234X" },
+      summary: { fund: "ABC Mutual Fund", units: 120, value: 125000 },
+      transactions: [{ date: "2024-04-01", action: "Purchase", units: 10 }],
+    };
+  }
+  if (type === "EQUITY") {
+    return {
+      profile: { dp: "NSDL", client_id: "123456" },
+      summary: { stocks: 5, total_value: 250000 },
+      transactions: [{ date: "2024-04-05", script: "TCS", qty: 2 }],
+    };
+  }
+  if (type === "ETF") {
+    return {
+      profile: { demat: "CDSL", etf: "NIFTY ETF" },
+      summary: { units: 15, value: 25500 },
+      transactions: [{ date: "2024-03-12", etf: "NIFTY ETF", units: 5 }],
+    };
+  }
+  // Default: DEPOSIT
+  return {
+    profile: { name: "Sample Name", account: "XXXX1234" },
+    summary: { balance: 10000, type: "Savings" },
+    transactions: [{ date: "2024-05-28", amount: 1000, narration: "Salary" }],
+  };
+}
+
+function detectFIType(text) {
+  if (/mutual fund/i.test(text)) return "MUTUAL_FUND";
+  if (/equity/i.test(text)) return "EQUITY";
+  if (/etf/i.test(text)) return "ETF";
+  return "DEPOSIT";
+}
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
+  if (req.method !== "POST") return res.status(405).end("Method Not Allowed");
 
   const form = new formidable.IncomingForm();
   form.parse(req, async (err, fields, files) => {
     if (err || !files.pdf) {
-      res.status(400).json({ error: "PDF upload failed" });
-      return;
+      return res.status(400).json({ error: "No PDF uploaded" });
     }
+
     try {
-      let buffer;
-      // Vercel may use 'buffer' property, not path!
-      if (files.pdf.filepath) {
-        // Use fs if path exists
-        const fs = await import('fs');
-        buffer = fs.readFileSync(files.pdf.filepath);
-      } else if (files.pdf._writeStream && files.pdf._writeStream.buffer) {
-        // Edge case, some versions put buffer here
-        buffer = files.pdf._writeStream.buffer;
-      } else if (files.pdf.buffer) {
-        buffer = files.pdf.buffer;
-      } else if (files.pdf instanceof Buffer) {
-        buffer = files.pdf;
-      } else {
-        res.status(400).json({ error: "Unable to get PDF buffer" });
-        return;
+      const pdfPath = files.pdf.filepath || files.pdf.path;
+      const pdfBuffer = fs.readFileSync(pdfPath);
+
+      // PDF.co integration
+      const pdfcoRes = await axios.post(
+        "https://api.pdf.co/v1/pdf/convert/to/text",
+        pdfBuffer,
+        {
+          headers: {
+            "Content-Type": "application/pdf",
+            "x-api-key": "rupam@onemoney.in_QnyHofU5rttFSoCCV7fJZGshsXCIBAH1lRBtl92hfdEVVqVtMRrZyLT8MDQ6RzUI",
+          },
+        }
+      );
+
+      const { data } = pdfcoRes;
+      if (!data || !data.body) {
+        throw new Error("PDF.co failed: " + JSON.stringify(data));
       }
+      const text = data.body;
+      const type = detectFIType(text);
+      const mapped = mapToAAJSON(type, text);
 
-      const data = await pdfParse(buffer);
-      const text = data.text || '';
-      // Your schema logic
-      const type = /mutual fund/i.test(text)
-        ? "MUTUAL_FUND"
-        : /equity/i.test(text)
-        ? "EQUITY"
-        : /etf/i.test(text)
-        ? "ETF"
-        : "DEPOSIT";
-      res.status(200).json({ type, extractedText: text });
-
+      res.status(200).json({ type, text, mapped });
     } catch (e) {
-      res.status(400).json({ error: "Failed to parse PDF: " + e.message });
+      res.status(500).json({ error: e.message || "Failed to parse PDF" });
     }
   });
 }
