@@ -10,7 +10,7 @@ module.exports = function mapDeposit(text) {
   const currentBalance = /Current Balance\s+([0-9.]+)/i.exec(text)?.[1]?.trim() ?? "";
   const accountType = /Type\s+([^\n]+)/i.exec(text)?.[1]?.trim() ?? "";
 
-  // Transaction extraction: You can tune regex for your PDFs
+  // Transaction extraction: update regex as per your PDFs
   const transactions = [];
   const txnRegex = /(\d{15,})\s+(DEBIT|CREDIT)\s+([A-Z]+)\s+([0-9.]+)\s+([0-9.]+)\s+(\d{4}-\d{2}-\d{2}T[^\s]+)\s+(\d{4}-\d{2}-\d{2})\s+([^\n]+)/g;
   let match;
