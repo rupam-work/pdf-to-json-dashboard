@@ -13,12 +13,9 @@ export default function Home() {
     if (!file) return;
 
     try {
-      // Only import pdfjs in the browser!
-      const pdfjsLib = await import('pdfjs-dist/build/pdf');
-      // Set up the worker from a CDN:
-      if (typeof window !== "undefined" && pdfjsLib.GlobalWorkerOptions) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js`;
-      }
+      // Import pdfjs legacy build (NO need to set workerSrc)
+      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf');
+
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
@@ -37,6 +34,7 @@ export default function Home() {
     }
   };
 
+  // Map extracted text to a dummy JSON structure
   function detectFITypeAndMapToJSON(rawText) {
     if (rawText.includes('Mutual Fund')) {
       return { type: "MUTUAL_FUND", extractedText: rawText };
@@ -50,7 +48,7 @@ export default function Home() {
     return { type: "DEPOSIT", extractedText: rawText };
   }
 
-  // Download JSON handler
+  // Download the generated JSON
   const handleDownload = () => {
     const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
