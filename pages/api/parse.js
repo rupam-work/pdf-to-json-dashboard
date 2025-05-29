@@ -4,7 +4,9 @@ import mapEquities from '../../mappers/equitiesMapper.js';
 import formidable from 'formidable';
 import { promises as fs } from 'fs';
 
-export const config = { api: { bodyParser: false } };
+export const config = {
+  api: { bodyParser: false }
+};
 
 const PDF_API_KEY = "rupam@onemoney.in_QnyHofU5rttFSoCCV7fJZGshsXCIBAH1lRBtl92hfdEVVqVtMRrZyLT8MDQ6RzUI";
 
@@ -15,7 +17,7 @@ export default async function handler(req, res) {
   let fileBuffer = null;
 
   try {
-    const form = new formidable.IncomingForm();
+    const form = formidable({ multiples: false, keepExtensions: true });
     const files = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
@@ -27,6 +29,8 @@ export default async function handler(req, res) {
     if (!pdfFile) return res.status(400).json({ error: "No PDF uploaded" });
     fileBuffer = await fs.readFile(pdfFile.filepath);
   } catch (e) {
+    // For debugging on Vercel logs
+    console.error('Formidable/FS error:', e);
     return res.status(400).json({ error: "File upload failed" });
   }
 
@@ -43,6 +47,7 @@ export default async function handler(req, res) {
     }
     text = data.body;
   } catch (err) {
+    console.error('PDF.co fetch error:', err);
     return res.status(500).json({ error: "API request failed: " + err.message });
   }
 
@@ -57,6 +62,7 @@ export default async function handler(req, res) {
     else if (fiType === "EQUITIES") result = mapEquities(text);
     else result = { error: "Unrecognized FI type or mapping not implemented." };
   } catch (err) {
+    console.error('Mapping logic error:', err);
     return res.status(500).json({ error: "Mapping logic failed: " + err.message });
   }
 
