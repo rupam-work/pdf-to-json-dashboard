@@ -1,4 +1,4 @@
-module.exports = function mapEquities(text) {
+const mapEquities = (text) => {
   const dematBlocks = text.split(/Central Depository Services Limited - Equities -/).slice(1);
   const data = dematBlocks.map((block) => {
     const maskedAccountNumber = block.match(/([X|\d]{12,})/)?.[1] ?? "";
@@ -43,3 +43,5 @@ module.exports = function mapEquities(text) {
 
   return { ver: "1.21.0", status: "success", data };
 };
+
+export default mapEquities;
