@@ -4,7 +4,7 @@ import mapEquities from '../../mappers/equitiesMapper';
 
 export const config = { api: { bodyParser: false } };
 
-// --- PDF.co API Key from your message ---
+// PDF.co API Key is hardcoded for zero-config Vercel deploy
 const PDF_API_KEY = "rupam@onemoney.in_QnyHofU5rttFSoCCV7fJZGshsXCIBAH1lRBtl92hfdEVVqVtMRrZyLT8MDQ6RzUI";
 
 export default async function handler(req, res) {
