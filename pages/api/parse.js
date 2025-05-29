@@ -4,9 +4,7 @@ import mapEquities from '../../mappers/equitiesMapper.js';
 import formidable from 'formidable';
 import { promises as fs } from 'fs';
 
-export const config = {
-  api: { bodyParser: false }
-};
+export const config = { api: { bodyParser: false } };
 
 const PDF_API_KEY = "rupam@onemoney.in_QnyHofU5rttFSoCCV7fJZGshsXCIBAH1lRBtl92hfdEVVqVtMRrZyLT8MDQ6RzUI";
 
@@ -25,20 +23,11 @@ export default async function handler(req, res) {
       });
     });
 
-    // --- DEBUG LOG ---
-    console.log("DEBUG formidable files:", files);
-
-    // Support both array and direct object
-    let pdfFile;
-    if (Array.isArray(files.pdf)) {
-      pdfFile = files.pdf[0];
-    } else {
-      pdfFile = files.pdf;
-    }
-    if (!pdfFile || !pdfFile.filepath) {
+    // On Vercel, always an array:
+    if (!files.pdf || !Array.isArray(files.pdf) || !files.pdf[0] || !files.pdf[0].filepath) {
       return res.status(400).json({ error: "No PDF uploaded or path missing" });
     }
-    fileBuffer = await fs.readFile(pdfFile.filepath);
+    fileBuffer = await fs.readFile(files.pdf[0].filepath);
   } catch (e) {
     console.error('Formidable/FS error:', e);
     return res.status(400).json({ error: "File upload failed" });
