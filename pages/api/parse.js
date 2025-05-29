@@ -32,4 +32,33 @@ export default async function handler(req, res) {
 
   let text;
   try {
-    const pdfResponse = await fetch("https://api.pdf.co/v1/pdf/c
+    const pdfResponse = await fetch("https://api.pdf.co/v1/pdf/convert/to/text", {
+      method: "POST",
+      headers: { "x-api-key": PDF_API_KEY, "Content-Type": "application/pdf" },
+      body: fileBuffer,
+    });
+    const data = await pdfResponse.json();
+    if (!data || data.error || !data.body) {
+      return res.status(500).json({ error: "PDF parse failed: " + (data && data.message ? data.message : "Unknown error") });
+    }
+    text = data.body;
+  } catch (err) {
+    return res.status(500).json({ error: "API request failed: " + err.message });
+  }
+
+  let fiType = "DEPOSIT";
+  if (/mutual\s*fund/i.test(text)) fiType = "MUTUAL_FUNDS";
+  else if (/equities?|demat|depository/i.test(text)) fiType = "EQUITIES";
+
+  let result;
+  try {
+    if (fiType === "DEPOSIT") result = mapDeposit(text);
+    else if (fiType === "MUTUAL_FUNDS") result = mapMutualFunds(text);
+    else if (fiType === "EQUITIES") result = mapEquities(text);
+    else result = { error: "Unrecognized FI type or mapping not implemented." };
+  } catch (err) {
+    return res.status(500).json({ error: "Mapping logic failed: " + err.message });
+  }
+
+  return res.status(200).json(result);
+}
