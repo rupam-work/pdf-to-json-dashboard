@@ -25,11 +25,21 @@ export default async function handler(req, res) {
       });
     });
 
-    const pdfFile = files.pdf;
-    if (!pdfFile) return res.status(400).json({ error: "No PDF uploaded" });
+    // --- DEBUG LOG ---
+    console.log("DEBUG formidable files:", files);
+
+    // Support both array and direct object
+    let pdfFile;
+    if (Array.isArray(files.pdf)) {
+      pdfFile = files.pdf[0];
+    } else {
+      pdfFile = files.pdf;
+    }
+    if (!pdfFile || !pdfFile.filepath) {
+      return res.status(400).json({ error: "No PDF uploaded or path missing" });
+    }
     fileBuffer = await fs.readFile(pdfFile.filepath);
   } catch (e) {
-    // For debugging on Vercel logs
     console.error('Formidable/FS error:', e);
     return res.status(400).json({ error: "File upload failed" });
   }
