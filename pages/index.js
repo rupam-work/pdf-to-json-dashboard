@@ -1,52 +1,61 @@
 import React, { useState } from 'react';
-import dynamic from 'next/dynamic';
-
-const ReactJson = dynamic(() => import('@microlink/react-json-view'), { ssr: false });
+import * as pdfjsLib from 'pdfjs-dist/build/pdf';
+import 'pdfjs-dist/build/pdf.worker.entry';
 
 export default function Home() {
   const [json, setJson] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [fileName, setFileName] = useState('');
 
-  async function handleFileChange(e) {
-    const file = e.target.files[0];
-    setFileName(file?.name || '');
-    if (!file) return;
-    setLoading(true);
+  const handleFileChange = async (e) => {
     setError('');
     setJson(null);
+    const file = e.target.files[0];
+    if (!file) return;
 
-    const formData = new FormData();
-    formData.append('pdf', file);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-    const res = await fetch('/api/parse', {
-      method: 'POST',
-      body: formData,
-    });
+      let textContent = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const txt = await page.getTextContent();
+        textContent += txt.items.map(item => item.str).join(' ') + '\n';
+      }
 
-    if (!res.ok) {
-      setError('Failed to parse PDF');
-      setLoading(false);
-      return;
+      // Use your own mapping logic here
+      const jsonResult = detectFITypeAndMapToJSON(textContent);
+      setJson(jsonResult);
+
+    } catch (err) {
+      setError('Failed to parse PDF: ' + err.message);
     }
-    const data = await res.json();
-    setJson(data);
-    setLoading(false);
+  };
+
+  // TODO: Replace with your real mapping logic!
+  function detectFITypeAndMapToJSON(rawText) {
+    // DEMO: You MUST replace with your AA schema logic!
+    if (rawText.includes('Mutual Fund')) {
+      return { type: "MUTUAL_FUND", extractedText: rawText };
+    }
+    if (rawText.includes('Equity')) {
+      return { type: "EQUITY", extractedText: rawText };
+    }
+    if (rawText.includes('ETF')) {
+      return { type: "ETF", extractedText: rawText };
+    }
+    return { type: "DEPOSIT", extractedText: rawText };
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: 'auto', padding: 40 }}>
+    <div style={{ margin: "40px auto", maxWidth: 700 }}>
       <h1>PDF to JSON Dashboard</h1>
       <input type="file" accept="application/pdf" onChange={handleFileChange} />
-      {fileName && <div style={{ marginTop: 8 }}>Selected: <b>{fileName}</b></div>}
-      {loading && <div>Parsing PDF, please wait...</div>}
-      {error && <div style={{ color: 'red' }}>{error}</div>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       {json && (
-        <div style={{ marginTop: 32 }}>
-          <h2>Resulting JSON</h2>
-          <ReactJson src={json} collapsed={false} displayDataTypes={false} />
-        </div>
+        <pre style={{ textAlign: "left", marginTop: 20, background: "#f6f8fa", padding: 20, borderRadius: 6 }}>
+          {JSON.stringify(json, null, 2)}
+        </pre>
       )}
     </div>
   );
