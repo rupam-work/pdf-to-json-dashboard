@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
-import { pdfjs } from 'pdfjs-dist';
-import * as pdfjsLib from 'pdfjs-dist/build/pdf';
-import JSONPretty from 'react-json-pretty';
-import 'react-json-pretty/themes/monikai.css';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+import dynamic from 'next/dynamic';
+const JSONPretty = dynamic(() => import('react-json-pretty'), { ssr: false });
 
 export default function Home() {
   const [json, setJson] = useState(null);
@@ -17,6 +13,14 @@ export default function Home() {
     if (!file) return;
 
     try {
+      // Only import pdfjs in the browser!
+      const pdfjsLib = await import('pdfjs-dist/build/pdf');
+      const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
+      if (typeof window !== "undefined" && pdfjsLib.GlobalWorkerOptions) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = window.URL.createObjectURL(
+          new Blob([pdfjsWorker.default], { type: "application/javascript" })
+        );
+      }
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
