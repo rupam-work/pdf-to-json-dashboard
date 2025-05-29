@@ -15,11 +15,9 @@ export default function Home() {
     try {
       // Only import pdfjs in the browser!
       const pdfjsLib = await import('pdfjs-dist/build/pdf');
-      const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
+      // Set up the worker from a CDN:
       if (typeof window !== "undefined" && pdfjsLib.GlobalWorkerOptions) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = window.URL.createObjectURL(
-          new Blob([pdfjsWorker.default], { type: "application/javascript" })
-        );
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js`;
       }
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
