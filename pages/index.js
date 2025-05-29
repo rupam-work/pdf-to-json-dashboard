@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { pdfjs } from 'pdfjs-dist';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf';
+import JSONPretty from 'react-json-pretty';
+import 'react-json-pretty/themes/monikai.css';
 
-// Setup the worker source for pdfjs
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 export default function Home() {
@@ -26,7 +27,6 @@ export default function Home() {
         textContent += txt.items.map(item => item.str).join(' ') + '\n';
       }
 
-      // Use your own mapping logic here
       const jsonResult = detectFITypeAndMapToJSON(textContent);
       setJson(jsonResult);
 
@@ -35,9 +35,7 @@ export default function Home() {
     }
   };
 
-  // TODO: Replace with your real mapping logic!
   function detectFITypeAndMapToJSON(rawText) {
-    // DEMO: You MUST replace with your AA schema logic!
     if (rawText.includes('Mutual Fund')) {
       return { type: "MUTUAL_FUND", extractedText: rawText };
     }
@@ -50,15 +48,33 @@ export default function Home() {
     return { type: "DEPOSIT", extractedText: rawText };
   }
 
+  // Download JSON handler
+  const handleDownload = () => {
+    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'parsed.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div style={{ margin: "40px auto", maxWidth: 700 }}>
       <h1>PDF to JSON Dashboard</h1>
       <input type="file" accept="application/pdf" onChange={handleFileChange} />
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {json && (
-        <pre style={{ textAlign: "left", marginTop: 20, background: "#f6f8fa", padding: 20, borderRadius: 6 }}>
-          {JSON.stringify(json, null, 2)}
-        </pre>
+        <>
+          <div style={{ margin: "20px 0" }}>
+            <button onClick={handleDownload} style={{
+              background: "#1976d2", color: "#fff", border: "none", padding: "10px 16px", borderRadius: 4, cursor: "pointer"
+            }}>
+              Download JSON
+            </button>
+          </div>
+          <JSONPretty data={json} style={{ fontSize: 16 }} />
+        </>
       )}
     </div>
   );
