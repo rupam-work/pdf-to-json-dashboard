@@ -46,16 +46,4 @@ export default function Home() {
         <>
           <div style={{ margin: "20px 0" }}>
             <button onClick={handleDownload} style={{
-              background: "#1976d2", color: "#fff", border: "none", padding: "10px 16px", borderRadius: 4, cursor: "pointer"
-            }}>
-              Download JSON
-            </button>
-          </div>
-          <pre style={{ textAlign: "left", marginTop: 20, background: "#f6f8fa", padding: 20, borderRadius: 6 }}>
-            {JSON.stringify(json, null, 2)}
-          </pre>
-        </>
-      )}
-    </div>
-  );
-}
+              background: "#1976d2", color: "#fff", border: "none", padding: "10px 16px", bor
