@@ -1,5 +1,4 @@
-module.exports = function mapMutualFunds(text) {
-  // Each folio/account split
+const mapMutualFunds = (text) => {
   const folioBlocks = text.split(/CAMS RTA - Mutual Funds -/).slice(1);
   const data = folioBlocks.map((block) => {
     const folioNo = /Folio No\s*([A-Z0-9\-X]+)/i.exec(block)?.[1] ?? "";
@@ -68,3 +67,5 @@ module.exports = function mapMutualFunds(text) {
 
   return { ver: "1.21.0", status: "success", data };
 };
+
+export default mapMutualFunds;
