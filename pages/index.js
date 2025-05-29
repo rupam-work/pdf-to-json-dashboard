@@ -13,8 +13,11 @@ export default function Home() {
     if (!file) return;
 
     try {
-      // Import pdfjs legacy build (NO need to set workerSrc)
-      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf');
+      // Import pdfjs
+      const pdfjsLib = await import('pdfjs-dist/build/pdf');
+
+      // Set the workerSrc for browser (ALWAYS NEEDED on Vercel)
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -34,7 +37,6 @@ export default function Home() {
     }
   };
 
-  // Map extracted text to a dummy JSON structure
   function detectFITypeAndMapToJSON(rawText) {
     if (rawText.includes('Mutual Fund')) {
       return { type: "MUTUAL_FUND", extractedText: rawText };
@@ -48,7 +50,6 @@ export default function Home() {
     return { type: "DEPOSIT", extractedText: rawText };
   }
 
-  // Download the generated JSON
   const handleDownload = () => {
     const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
