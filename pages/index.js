@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
+
 const JSONPretty = dynamic(() => import('react-json-pretty'), { ssr: false });
 
 export default function Home() {
@@ -13,11 +14,11 @@ export default function Home() {
     if (!file) return;
 
     try {
-      // Import pdfjs
       const pdfjsLib = await import('pdfjs-dist/build/pdf');
 
-      // Set the workerSrc for browser (ALWAYS NEEDED on Vercel)
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      // *** HARD-CODED to 4.2.67 (the CDN version that exists!) ***
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js";
 
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
