@@ -1,32 +1,39 @@
 import mapDeposit from '../../mappers/depositMapper';
 import mapMutualFunds from '../../mappers/mutualFundsMapper';
 import mapEquities from '../../mappers/equitiesMapper';
+import formidable from 'formidable';
+import { promises as fs } from 'fs';
 
 export const config = { api: { bodyParser: false } };
 
-// PDF.co API Key is hardcoded for zero-config Vercel deploy
+// Hardcoded API key for PDF.co as per your requirement
 const PDF_API_KEY = "rupam@onemoney.in_QnyHofU5rttFSoCCV7fJZGshsXCIBAH1lRBtl92hfdEVVqVtMRrZyLT8MDQ6RzUI";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-  const Busboy = (await import("busboy")).default;
-  let fileBuffer = Buffer.alloc(0);
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "Method not allowed" });
+
+  let fileBuffer = null;
 
   try {
-    await new Promise((resolve, reject) => {
-      const bb = new Busboy({ headers: req.headers });
-      bb.on("file", (_, file) => {
-        file.on("data", (data) => { fileBuffer = Buffer.concat([fileBuffer, data]); });
+    // 1. Use formidable to parse multipart form
+    const form = new formidable.IncomingForm();
+    const files = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve(files);
       });
-      bb.on("finish", resolve);
-      bb.on("error", reject);
-      req.pipe(bb);
     });
+
+    // 2. Get file buffer
+    const pdfFile = files.pdf;
+    if (!pdfFile) return res.status(400).json({ error: "No PDF uploaded" });
+    fileBuffer = await fs.readFile(pdfFile.filepath);
   } catch (e) {
     return res.status(400).json({ error: "File upload failed" });
   }
-  if (!fileBuffer.length) return res.status(400).json({ error: "No PDF uploaded" });
 
+  // 3. Call PDF.co API
   let text;
   try {
     const pdfResponse = await fetch("https://api.pdf.co/v1/pdf/convert/to/text", {
@@ -43,10 +50,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "API request failed: " + err.message });
   }
 
+  // 4. Detect FI type
   let fiType = "DEPOSIT";
   if (/mutual\s*fund/i.test(text)) fiType = "MUTUAL_FUNDS";
   else if (/equities?|demat|depository/i.test(text)) fiType = "EQUITIES";
 
+  // 5. Run mapping logic
   let result;
   try {
     if (fiType === "DEPOSIT") result = mapDeposit(text);
