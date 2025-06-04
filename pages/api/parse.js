@@ -3,6 +3,7 @@ import mapMutualFunds from '../../mappers/mutualFundsMapper.js';
 import mapEquities from '../../mappers/equitiesMapper.js';
 import formidable from 'formidable';
 import { promises as fs } from 'fs';
+import FormData from 'form-data';
 
 export const config = { api: { bodyParser: false } };
 
@@ -16,10 +17,11 @@ export default async function handler(req, res) {
   let mimeType = 'application/pdf';
   let text;
   let tempPath = null;
+  let files = null;
 
   try {
     const form = formidable({ multiples: false, keepExtensions: true });
-    const files = await new Promise((resolve, reject) => {
+    files = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
         else resolve(files);
@@ -38,11 +40,19 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "File upload failed" });
   }
   try {
-    // upload file to PDF.co first
+    // upload file to PDF.co first using multipart/form-data
+    const uploadForm = new FormData();
+    uploadForm.append('file', fileBuffer, {
+      filename: files.pdf[0].originalFilename || 'upload.pdf',
+      contentType: mimeType,
+    });
     const uploadRes = await fetch("https://api.pdf.co/v1/file/upload", {
       method: "POST",
-      headers: { "x-api-key": PDF_API_KEY },
-      body: fileBuffer,
+      headers: {
+        "x-api-key": PDF_API_KEY,
+        ...uploadForm.getHeaders(),
+      },
+      body: uploadForm,
     });
     const uploadData = await uploadRes.json();
     if (!uploadData || !uploadData.url) {
