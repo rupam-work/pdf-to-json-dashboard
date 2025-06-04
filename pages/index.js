@@ -21,7 +21,7 @@ export default function Home() {
       if (!res.ok) throw new Error(result.error || 'Unknown error');
       setJson(result);
     } catch (err) {
-      setError('Failed to parse PDF: ' + err.message);
+      setError('Failed to parse file: ' + err.message);
     }
   };
 
@@ -39,7 +39,11 @@ export default function Home() {
   return (
     <div style={{ margin: "40px auto", maxWidth: 700 }}>
       <h1>PDF to JSON Dashboard</h1>
-      <input type="file" accept="application/pdf" onChange={handleFileChange} />
+      <input
+        type="file"
+        accept="application/pdf,image/*"
+        onChange={handleFileChange}
+      />
       {fileName && <span style={{ marginLeft: 8 }}>Selected: <b>{fileName}</b></span>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {json && (
