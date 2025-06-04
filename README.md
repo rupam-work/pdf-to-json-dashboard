@@ -1,6 +1,6 @@
 # PDF to JSON Dashboard
 
-This project lets you upload Indian FI PDF statements (Deposit, Mutual Fund, Equities) and returns a JSON in AA schema.
+This project lets you upload Indian FI statements (Deposit, Mutual Fund, Equities) as PDF files or screenshots and returns a JSON in AA schema.
 
 ## Quick Start
 
