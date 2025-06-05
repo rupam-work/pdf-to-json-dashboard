@@ -25,7 +25,7 @@ npm run dev
 ```
 
 - Frontend: [http://localhost:3000](http://localhost:3000)
-- Backend API: [http://localhost:3001/api/upload](http://localhost:3001/api/upload)
+- Backend API: [http://localhost:5000/api/upload](http://localhost:5000/api/upload)
 
 ## Production
 
@@ -43,3 +43,17 @@ node server/index.js
 3. The parsed data for each file will be displayed as JSON. The structure of the JSON matches `deposit-masked.json` in this repository.
 
 All processing is done locally using open‑source libraries with no external APIs.
+
+## Debugging Uploads
+
+If the page shows "Failed to fetch" when uploading:
+
+1. Open the browser developer tools and check the **Network** tab for the
+   `/api/upload` request. Any CORS or network errors will be shown here.
+2. Look at the terminal where the Express server is running for error messages
+   (for example, file size limits or parsing failures).
+3. Ensure the backend is running on **http://localhost:5000** and that the
+   React frontend is running on port **3000**.
+4. Verify that your uploaded files are valid PDFs or images and not too large
+   for the default `multer` configuration.
+

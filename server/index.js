@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
@@ -82,6 +83,8 @@ function extractDepositData(text) {
 }
 
 const app = express();
+app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(express.json());
 const upload = multer({ dest: 'uploads/' });
 
 async function ocrImage(filePath) {
@@ -143,5 +146,5 @@ app.post('/api/upload', upload.array('files'), async (req, res) => {
   res.json({ files: results });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
