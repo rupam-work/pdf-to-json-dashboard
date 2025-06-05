@@ -1,6 +1,6 @@
 # PDF/Image Text Extractor
 
-This project provides a simple full‑stack application for extracting all text from uploaded PDF or image files. It uses **Next.js** for the frontend and an **Express** server for the backend. PDFs are processed with `pdf-parse`; if no text is found, each page is converted to an image with `pdf-poppler` and OCR is performed using `tesseract.js`.
+This project provides a simple full‑stack application for extracting text from uploaded PDF or image files and mapping that text into a structured JSON format. It uses **Next.js** for the frontend and an **Express** server for the backend. PDFs are processed with `pdf-parse`; if no text is found, each page is converted to an image with `pdf-poppler` and OCR is performed using `tesseract.js`.
 
 ## Prerequisites
 
@@ -40,6 +40,6 @@ node server/index.js
 
 1. Open the frontend in your browser.
 2. Select one or more PDF or image files and click **Upload**.
-3. Extracted text from each file will be displayed on the page.
+3. The parsed data for each file will be displayed as JSON. The structure of the JSON matches `deposit-masked.json` in this repository.
 
 All processing is done locally using open‑source libraries with no external APIs.
