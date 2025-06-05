@@ -18,10 +18,10 @@ npm install
 
 ## Development
 
-Run both the Express server and Next.js frontend in development mode.
-Set `FRONTEND_URL` and `NEXT_PUBLIC_API_URL` to your local addresses.
-The backend listens on port **5000** by default and automatically creates an
-`uploads` folder for temporary files:
+Run both the Express server and Next.js frontend in development mode. Set
+`FRONTEND_URL` and `NEXT_PUBLIC_API_URL` to your local addresses. The backend
+listens on port **5000** by default and automatically creates an `uploads`
+folder for temporary files:
 
 ```bash
 npm run dev
