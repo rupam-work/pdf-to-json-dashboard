@@ -1,29 +1,45 @@
-# PDF to JSON Dashboard
+# PDF/Image Text Extractor
 
-This project lets you upload Indian FI statements (Deposit, Mutual Fund, Equities) as PDF files or screenshots and returns a JSON in AA schema.
+This project provides a simple full‑stack application for extracting all text from uploaded PDF or image files. It uses **Next.js** for the frontend and an **Express** server for the backend. PDFs are processed with `pdf-parse`; if no text is found, each page is converted to an image with `pdf-poppler` and OCR is performed using `tesseract.js`.
 
-## Quick Start
+## Prerequisites
 
-1. Clone the repo, `npm install`
-2. Run locally: `npm run dev`
-3. Deploy on Vercel: Just push, no config needed!
+- Node.js 18+
+- `poppler-utils` installed on your system (for `pdftoppm`). On Ubuntu you can run:
+  ```bash
+  sudo apt-get install poppler-utils
+  ```
 
-> **Note:**  
-> The PDF.co API key is hardcoded in `/pages/api/parse.js`.  
-> For security, switch to environment variables if open-sourcing.
+## Setup
 
-## Structure
+```bash
+npm install
+```
 
-- `/mappers`: Modular mapping logic for each FI type
-- `/pages/api/parse.js`: Backend API
-- `/pages/index.js`: Upload UI
+## Development
 
-## Supported FI Types
+Run both the Express server and Next.js frontend in development mode:
 
-- Deposit (Bank)
-- Mutual Funds
-- Equities
+```bash
+npm run dev
+```
 
-## Contribute
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend API: [http://localhost:3001/api/upload](http://localhost:3001/api/upload)
 
-Feel free to fork and adapt for new FI types or mapping rules!
+## Production
+
+Build the Next.js app and start the server:
+
+```bash
+npm run build
+node server/index.js
+```
+
+## Usage
+
+1. Open the frontend in your browser.
+2. Select one or more PDF or image files and click **Upload**.
+3. Extracted text from each file will be displayed on the page.
+
+All processing is done locally using open‑source libraries with no external APIs.

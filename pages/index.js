@@ -1,64 +1,48 @@
 import React, { useState } from 'react';
 
 export default function Home() {
-  const [json, setJson] = useState(null);
+  const [text, setText] = useState('');
   const [error, setError] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [files, setFiles] = useState([]);
 
-  const handleFileChange = async (e) => {
+  const handleChange = async (e) => {
     setError('');
-    setJson(null);
-    const file = e.target.files[0];
-    setFileName(file ? file.name : '');
-    if (!file) return;
+    setText('');
+    const selected = Array.from(e.target.files || []);
+    setFiles(selected);
+  };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (files.length === 0) return;
     const formData = new FormData();
-    formData.append("pdf", file);
-
+    files.forEach(f => formData.append('files', f));
     try {
-      const res = await fetch('/api/parse', { method: 'POST', body: formData });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Unknown error');
-      setJson(result);
+      const res = await fetch('http://localhost:3001/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      const combined = data.files.map(f => `--- ${f.name} ---\n${f.text || f.error}`).join('\n\n');
+      setText(combined);
     } catch (err) {
-      setError('Failed to parse file: ' + err.message);
+      setError(err.message);
     }
   };
 
-  const handleDownload = () => {
-    if (!json) return;
-    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'parsed.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   return (
-    <div style={{ margin: "40px auto", maxWidth: 700 }}>
-      <h1>PDF to JSON Dashboard</h1>
-      <input
-        type="file"
-        accept="application/pdf,image/*"
-        onChange={handleFileChange}
-      />
-      {fileName && <span style={{ marginLeft: 8 }}>Selected: <b>{fileName}</b></span>}
+    <div style={{ margin: '40px auto', maxWidth: 700 }}>
+      <h1>PDF/Image Text Extractor</h1>
+      <form onSubmit={handleSubmit}>
+        <input type="file" multiple accept="application/pdf,image/*" onChange={handleChange} />
+        <button type="submit" style={{ marginLeft: 10 }}>Upload</button>
+      </form>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {json && (
-        <>
-          <div style={{ margin: "20px 0" }}>
-            <button onClick={handleDownload} style={{
-              background: "#1976d2", color: "#fff", border: "none", padding: "10px 16px", borderRadius: 4, cursor: "pointer"
-            }}>
-              Download JSON
-            </button>
-          </div>
-          <pre style={{ textAlign: "left", marginTop: 20, background: "#f6f8fa", padding: 20, borderRadius: 6 }}>
-            {JSON.stringify(json, null, 2)}
-          </pre>
-        </>
+      {text && (
+        <pre style={{ textAlign: 'left', marginTop: 20, background: '#f6f8fa', padding: 20, borderRadius: 6 }}>
+          {text}
+        </pre>
       )}
     </div>
   );
