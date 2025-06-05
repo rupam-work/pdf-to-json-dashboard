@@ -24,7 +24,9 @@ export default function Home() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
-      const combined = data.files.map(f => `--- ${f.name} ---\n${f.text || f.error}`).join('\n\n');
+      const combined = data.files
+        .map(f => `--- ${f.name} ---\n${JSON.stringify(f.data || f.error, null, 2)}`)
+        .join('\n\n');
       setText(combined);
     } catch (err) {
       setError(err.message);

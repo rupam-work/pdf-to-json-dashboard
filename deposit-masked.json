@@ -1,0 +1,68 @@
+{
+  "status": "success",
+  "ver": "1.19.0",
+  "data": [
+    {
+      "linkReferenceNumber": "REF123",
+      "maskedAccountNumber": "XXXX1234",
+      "fiType": "deposit",
+      "bank": "Sample Bank",
+      "Summary": {
+        "currentBalance": "1000",
+        "currency": "INR",
+        "exchgeRate": "",
+        "balanceDateTime": "2023-01-01",
+        "type": "savings",
+        "branch": "Main",
+        "facility": "",
+        "ifscCode": "SBIN0000001",
+        "micrCode": "",
+        "openingDate": "2022-01-01",
+        "currentODLimit": "",
+        "drawingLimit": "",
+        "status": "active",
+        "Pending": [
+          {
+            "amount": 0,
+            "transactionType": ""
+          }
+        ]
+      },
+      "Profile": {
+        "Holders": {
+          "type": "single",
+          "Holder": [
+            {
+              "name": "John Doe",
+              "dob": "1990-01-01",
+              "mobile": "",
+              "nominee": "",
+              "landline": "",
+              "address": "",
+              "email": "",
+              "pan": "",
+              "ckycCompliance": ""
+            }
+          ]
+        }
+      },
+      "Transactions": {
+        "startDate": "2023-01-01",
+        "endDate": "2023-01-31",
+        "Transaction": [
+          {
+            "type": "debit",
+            "mode": "UPI",
+            "amount": "100",
+            "currentBalance": "900",
+            "transactionTimestamp": "2023-01-10",
+            "valueDate": "2023-01-10",
+            "txnId": "TXN1",
+            "narration": "Sample transaction",
+            "reference": "REF1"
+          }
+        ]
+      }
+    }
+  ]
+}
