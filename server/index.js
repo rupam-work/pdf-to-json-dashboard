@@ -1,12 +1,91 @@
 const express = require('express');
 const multer = require('multer');
+const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
 const { Poppler } = require('node-poppler');
 const Tesseract = require('tesseract.js');
 
+// Build deposit JSON structure from extracted text
+function extractDepositData(text) {
+  const template = {
+    status: 'success',
+    ver: '1.19.0',
+    data: [
+      {
+        linkReferenceNumber: '',
+        maskedAccountNumber: '',
+        fiType: '',
+        bank: '',
+        Summary: {
+          currentBalance: '',
+          currency: '',
+          exchgeRate: '',
+          balanceDateTime: '',
+          type: '',
+          branch: '',
+          facility: '',
+          ifscCode: '',
+          micrCode: '',
+          openingDate: '',
+          currentODLimit: '',
+          drawingLimit: '',
+          status: '',
+          Pending: []
+        },
+        Profile: {
+          Holders: {
+            type: '',
+            Holder: []
+          }
+        },
+        Transactions: {
+          startDate: '',
+          endDate: '',
+          Transaction: []
+        }
+      }
+    ]
+  };
+
+  // basic regex based extraction
+  const accMatch = text.match(/Account(?:\s*Number)?\s*[:\-]?\s*(\d{4,})/i);
+  if (accMatch) template.data[0].maskedAccountNumber = accMatch[1];
+
+  const ifscMatch = text.match(/IFSC\s*[:\-]?\s*([A-Z]{4}0\d{6})/i);
+  if (ifscMatch) template.data[0].Summary.ifscCode = ifscMatch[1];
+
+  const bankMatch = text.match(/Bank\s*[:\-]?\s*([A-Za-z ]+)/i);
+  if (bankMatch) template.data[0].bank = bankMatch[1].trim();
+
+  // transactions parsing - very naive, expects lines with date amount balance
+  const lines = text.split(/\n+/);
+  const txnRegex = /(\d{2}[\/\-]\d{2}[\/\-]\d{4}).*?(\d+(?:,\d{3})*(?:\.\d+)?).*?(\d+(?:,\d{3})*(?:\.\d+)?)/;
+  for (const l of lines) {
+    const m = l.match(txnRegex);
+    if (m) {
+      template.data[0].Transactions.Transaction.push({
+        type: '',
+        mode: '',
+        amount: m[2],
+        currentBalance: m[3],
+        transactionTimestamp: m[1],
+        valueDate: '',
+        txnId: '',
+        narration: l,
+        reference: ''
+      });
+    }
+  }
+
+  return template;
+}
+
 const app = express();
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+app.use(cors({ origin: FRONTEND_URL }));
+app.use(express.json());
 const upload = multer({ dest: 'uploads/' });
 
 async function ocrImage(filePath) {
@@ -42,7 +121,7 @@ async function parsePdf(filePath) {
   return text;
 }
 
-app.post('/api/upload', upload.array('files'), async (req, res) => {
+app.post('/api/parse', upload.array('files'), async (req, res) => {
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ error: 'No files uploaded' });
   }
@@ -56,7 +135,8 @@ app.post('/api/upload', upload.array('files'), async (req, res) => {
       } else {
         text = await ocrImage(file.path);
       }
-      results.push({ name: file.originalname, text });
+      const data = extractDepositData(text);
+      results.push({ name: file.originalname, data });
     } catch (e) {
       results.push({ name: file.originalname, error: e.message });
     } finally {
@@ -67,5 +147,5 @@ app.post('/api/upload', upload.array('files'), async (req, res) => {
   res.json({ files: results });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
