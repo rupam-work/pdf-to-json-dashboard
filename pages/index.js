@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 
 export default function Home() {
-  const [text, setText] = useState('');
+  const [results, setResults] = useState([]);
   const [error, setError] = useState('');
   const [files, setFiles] = useState([]);
 
   const handleChange = async (e) => {
     setError('');
-    setText('');
+    setResults([]);
     const selected = Array.from(e.target.files || []);
     setFiles(selected);
   };
@@ -18,14 +18,14 @@ export default function Home() {
     const formData = new FormData();
     files.forEach(f => formData.append('files', f));
     try {
-      const res = await fetch('http://localhost:3001/api/upload', {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${baseUrl}/api/parse`, {
         method: 'POST',
         body: formData
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
-      const combined = data.files.map(f => `--- ${f.name} ---\n${f.text || f.error}`).join('\n\n');
-      setText(combined);
+      setResults(data.files);
     } catch (err) {
       setError(err.message);
     }
@@ -39,11 +39,18 @@ export default function Home() {
         <button type="submit" style={{ marginLeft: 10 }}>Upload</button>
       </form>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {text && (
-        <pre style={{ textAlign: 'left', marginTop: 20, background: '#f6f8fa', padding: 20, borderRadius: 6 }}>
-          {text}
-        </pre>
-      )}
+      {results.map(r => (
+        <div key={r.name} style={{ marginTop: 20, textAlign: 'left' }}>
+          <h3>{r.name}</h3>
+          {r.error ? (
+            <p style={{ color: 'red' }}>{r.error}</p>
+          ) : (
+            <pre style={{ background: '#f6f8fa', padding: 20, borderRadius: 6 }}>
+              {JSON.stringify(r.data, null, 2)}
+            </pre>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
