@@ -16,6 +16,8 @@ This project provides a simple full‑stack application for extracting text from
 npm install
 ```
 
+Copy `.env.example` to `.env.local` to configure environment variables for development.
+
 Run the minimal test script (optional):
 
 ```bash
@@ -59,7 +61,7 @@ All processing is done locally using open‑source libraries with no external AP
 - `FRONTEND_URL` – URL allowed by the backend for CORS (e.g. your deployed Vercel app)
 - `NEXT_PUBLIC_API_URL` – base URL of the backend API used by the frontend
 
-Set these in Vercel project settings for production and in a `.env.local` file for local development.
+Copy `.env.example` to `.env.local` and adjust the values for your environment. Set the same variables in Vercel project settings when deploying.
 
 ## Debugging Uploads
 
