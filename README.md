@@ -16,6 +16,12 @@ This project provides a simple full‑stack application for extracting text from
 npm install
 ```
 
+Run the minimal test script (optional):
+
+```bash
+npm test
+```
+
 ## Development
 
 Run both the Express server and Next.js frontend in development mode. Set
