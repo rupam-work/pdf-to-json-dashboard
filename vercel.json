@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "pages/api/parse.js": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
