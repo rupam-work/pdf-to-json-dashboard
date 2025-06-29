@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Statement PDF to JSON Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bank Statement Converter</h1>
+            <p class="subtitle">Convert PDF bank statements to structured JSON format</p>
+        </header>
+        
+        <main>
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <svg class="upload-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 10L12 5L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 5V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M20 16V20C20 20.5304 19.7893 21.0391 19.4142 21.4142C19.0391 21.7893 18.5304 22 18 22H6C5.46957 22 4.96086 21.7893 4.58579 21.4142C4.21071 21.0391 4 20.5304 4 20V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div class="upload-text">Drop your PDF here or click to browse</div>
+                    <div class="upload-hint">Supports all major bank statement formats</div>
+                    <input type="file" id="fileInput" accept=".pdf" hidden>
+                </div>
+            </div>
+            
+            <div id="progressSection" class="progress-section hidden">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Processing PDF...</p>
+            </div>
+            
+            <div id="resultSection" class="result-section hidden">
+                <div class="result-header">
+                    <h2>Conversion Complete</h2>
+                    <div class="result-actions">
+                        <button class="btn btn-primary" id="downloadBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Download JSON
+                        </button>
+                        <button class="btn btn-secondary" id="copyBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+                                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="data-preview">
+                    <h3>Extracted Data Preview</h3>
+                    <div class="preview-tabs">
+                        <button class="tab-btn active" data-tab="summary">Summary</button>
+                        <button class="tab-btn" data-tab="profile">Profile</button>
+                        <button class="tab-btn" data-tab="transactions">Transactions</button>
+                        <button class="tab-btn" data-tab="raw">Raw JSON</button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <div id="summaryTab" class="tab-pane active">
+                            <div class="info-grid" id="summaryInfo"></div>
+                        </div>
+                        <div id="profileTab" class="tab-pane">
+                            <div class="info-grid" id="profileInfo"></div>
+                        </div>
+                        <div id="transactionsTab" class="tab-pane">
+                            <div class="transactions-list" id="transactionsList"></div>
+                        </div>
+                        <div id="rawTab" class="tab-pane">
+                            <pre class="json-preview" id="jsonPreview"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="errorSection" class="error-section hidden">
+                <div class="error-icon">⚠️</div>
+                <h2>Error Processing PDF</h2>
+                <p id="errorMessage"></p>
+                <button class="btn btn-primary" onclick="location.reload()">Try Again</button>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Built with PDF.js • Supports all major bank statement formats</p>
+        </footer>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
