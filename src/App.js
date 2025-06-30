@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Upload, FileText, Download, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import './styles.css';
-import { parseBankStatement } from './lib/parseBankStatement';
+import { parseBankStatement } from '../lib/parseBankStatement';
 
 function App() {
   const [file, setFile] = useState(null);
