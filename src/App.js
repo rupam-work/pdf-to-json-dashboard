@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Upload, FileText, Download, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import './styles.css';
-import { parseBankStatement } from '../lib/parseBankStatement';
+import { parseBankStatement, debugTransactionExtraction } from '../lib/parseBankStatement';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -11,6 +11,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('formatted');
   const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
 
   const handleFileUpload = useCallback((e) => {
     const uploadedFile = e.target.files[0];
@@ -49,12 +50,42 @@ function App() {
           
           let fullText = '';
           
-          // Extract text from all pages
+          // Extract text from all pages with better formatting
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
-            const pageText = textContent.items.map(item => item.str).join(' ');
-            fullText += pageText + '\n';
+            
+            // Group text items by their Y position to maintain line structure
+            const textItems = textContent.items;
+            const lines = {};
+            
+            textItems.forEach(item => {
+              const y = Math.round(item.transform[5]);
+              if (!lines[y]) {
+                lines[y] = [];
+              }
+              lines[y].push(item);
+            });
+            
+            // Sort lines by Y position (top to bottom)
+            const sortedYPositions = Object.keys(lines).sort((a, b) => b - a);
+            
+            // Build text with proper line breaks
+            sortedYPositions.forEach(y => {
+              const lineItems = lines[y].sort((a, b) => a.transform[4] - b.transform[4]);
+              const lineText = lineItems.map(item => item.str).join(' ');
+              fullText += lineText + '\n';
+            });
+            
+            fullText += '\n'; // Add extra line break between pages
+          }
+          
+          // Debug mode logging
+          if (debugMode) {
+            console.log('=== Extracted PDF Text ===');
+            console.log(fullText);
+            const debugInfo = debugTransactionExtraction(fullText);
+            console.log('Debug Info:', debugInfo);
           }
           
           // Parse the extracted text using enhanced parser
@@ -63,6 +94,14 @@ function App() {
           if (parsedData.status === 'success' && parsedData.data.length > 0) {
             setJsonData(parsedData);
             setError(null);
+            
+            // Log transaction count
+            const transactionCount = parsedData.data[0].Transactions?.Transaction?.length || 0;
+            console.log(`Successfully parsed ${transactionCount} transactions`);
+            
+            if (transactionCount === 0) {
+              setError('Warning: No transactions were found in the PDF. Please check if the PDF format is supported.');
+            }
           } else {
             setError('Could not extract bank statement data from the PDF. Please ensure it\'s a valid bank statement.');
           }
@@ -79,7 +118,7 @@ function App() {
       setError('Error reading file: ' + err.message);
       setLoading(false);
     }
-  }, [file]);
+  }, [file, debugMode]);
 
   const downloadJson = useCallback(() => {
     if (!jsonData) return;
@@ -208,7 +247,7 @@ function App() {
             </div>
             <div className="info-item">
               <span className="label">Balance as on:</span>
-              <span className="value">{new Date(summary.balanceDateTime).toLocaleString()}</span>
+              <span className="value">{summary.balanceDateTime ? new Date(summary.balanceDateTime).toLocaleString() : ''}</span>
             </div>
           </div>
         </div>
@@ -225,7 +264,7 @@ function App() {
               <p>{formatCurrency(
                 transactions
                   .filter(t => t.type === 'CREDIT')
-                  .reduce((sum, t) => sum + parseFloat(t.amount), 0)
+                  .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
               )}</p>
             </div>
             <div className="summary-card">
@@ -233,14 +272,18 @@ function App() {
               <p>{formatCurrency(
                 transactions
                   .filter(t => t.type === 'DEBIT')
-                  .reduce((sum, t) => sum + parseFloat(t.amount), 0)
+                  .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
               )}</p>
             </div>
+          </div>
+          <div className="info-item">
+            <span className="label">Statement Period:</span>
+            <span className="value">{account.Transactions?.startDate} to {account.Transactions?.endDate}</span>
           </div>
         </div>
 
         <div className="section">
-          <h3>Recent Transactions</h3>
+          <h3>All Transactions ({transactions.length})</h3>
           <div className="table-container">
             <table className="transaction-table">
               <thead>
@@ -255,16 +298,16 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {transactions.slice(-10).reverse().map((txn, index) => (
+                {transactions.map((txn, index) => (
                   <tr key={index}>
-                    <td>{new Date(txn.transactionTimestamp).toLocaleDateString()}</td>
+                    <td>{txn.transactionTimestamp ? new Date(txn.transactionTimestamp).toLocaleDateString() : ''}</td>
                     <td>{txn.txnId}</td>
-                    <td className={`type ${txn.type.toLowerCase()}`}>{txn.type}</td>
+                    <td className={`type ${txn.type?.toLowerCase()}`}>{txn.type}</td>
                     <td>{txn.mode}</td>
                     <td className={txn.type === 'CREDIT' ? 'credit' : 'debit'}>
-                      {formatCurrency(txn.amount)}
+                      {formatCurrency(txn.amount || 0)}
                     </td>
-                    <td>{formatCurrency(txn.currentBalance)}</td>
+                    <td>{formatCurrency(txn.currentBalance || 0)}</td>
                     <td className="narration">{txn.narration}</td>
                   </tr>
                 ))}
@@ -312,13 +355,23 @@ function App() {
             </div>
           )}
 
-          <button 
-            className="convert-button" 
-            onClick={convertToJson}
-            disabled={!file || loading}
-          >
-            {loading ? 'Converting...' : 'Convert to JSON'}
-          </button>
+          <div className="button-group">
+            <button 
+              className="convert-button" 
+              onClick={convertToJson}
+              disabled={!file || loading}
+            >
+              {loading ? 'Converting...' : 'Convert to JSON'}
+            </button>
+            <label className="debug-toggle">
+              <input
+                type="checkbox"
+                checked={debugMode}
+                onChange={(e) => setDebugMode(e.target.checked)}
+              />
+              Debug Mode
+            </label>
+          </div>
         </div>
 
         {jsonData && (
