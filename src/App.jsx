@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ScreenshotProcessor from './components/ScreenshotProcessor';
+import ScreenshotProcessorFixed from './components/ScreenshotProcessorFixed';
 import EnhancedDashboard from './components/EnhancedDashboard';
 import { FileImage, BarChart3, Tabs, Upload, Brain, Settings } from 'lucide-react';
 
@@ -99,7 +99,7 @@ function App() {
             </div>
 
             {/* Screenshot Processor */}
-            <ScreenshotProcessor onDataExtracted={handleDataExtracted} />
+            <ScreenshotProcessorFixed onDataExtracted={handleDataExtracted} />
 
             {/* Features Section */}
             <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8 mt-8">
